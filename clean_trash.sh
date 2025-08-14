@@ -3,6 +3,7 @@
 # 设置定量 | Quantities
 ## 初始化变量 | Initialize variables
 VERBOSE=0
+VERSION="1.0.0"
 ## 当前语言 | Current language
 CURRENT_LANG=0 # 0: en-US, 1: zh-Hans-CN
 ## 定义回收站目录 | Define trash directory
@@ -25,24 +26,41 @@ recho() {
 # 显示帮助信息 | Show help message
 show_help() {
   recho "回收站清理工具" "Trash cleaner tool"
-  recho "用法：$0 [-h] [-v] <保留天数>" "Usage: $0 [-h] [-v] <days>"
+  recho "用法：$0 [-h] [-v] [-V] <保留天数>" "Usage: $0 [-h] [-v] [-V] <days>"
   recho "选项：" "Options:"
   recho "  -h  显示帮助信息" "  -h  Show help"
   recho "  -v  详细输出模式" "  -v  Verbose mode"
+  recho "  -V  显示版本信息" "  -V  Show version"
   recho "示例：" "Examples:"
   recho "  $0 30    # 清理 30 天前的回收站文件" "  $0 30    # Clean trash files older than 30 days"
   recho "  $0 -v 7  # 详细模式清理 7 天前文件" "  $0 -v 7  # Verbose mode to clean files older than 7 days"
+}
+
+# 显示版本信息 | Show version
+show_version() {
+  recho "回收站清理工具 v$VERSION" "Trash cleaner tool v$VERSION"
 }
 
 # 语言检测 | Language detection
 if [ $(echo ${LANG/_/-} | grep -Ei "\\b(zh|cn)\\b") ]; then CURRENT_LANG=1; fi
 
 # 解析选项 | Parse options
-while getopts ":hv" opt; do
-  case $opt in
-    h) show_help ; exit 0 ;;
-    v) VERBOSE=1 ;;
-    \?) recho "错误：无效选项 -$OPTARG" "Error: Invalid option -$OPTARG" >&2; exit 1 ;;
+# 处理长选项 | Handle long options
+TEMP=$(getopt -o 'hvV' --long 'help,verbose,version' -n 'clean_trash.sh' -- "$@")
+if [ $? != 0 ]; then
+  recho "错误：无效选项" "Error: Invalid option" >&2
+  exit 1
+fi
+
+eval set -- "$TEMP"
+
+while true; do
+  case "$1" in
+    -h|--help) show_help ; exit 0 ;;
+    -v|--verbose) VERBOSE=1 ; shift ;;
+    -V|--version) show_version ; exit 0 ;;
+    --) shift ; break ;;
+    *) recho "错误：无效选项" "Error: Invalid option" >&2; exit 1 ;;
   esac
 done
 shift $((OPTIND-1))

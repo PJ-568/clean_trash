@@ -14,13 +14,15 @@
 
 ```bash
 回收站清理工具
-用法：./clean_trash.sh [-h] [-v] <保留天数>
+用法：./clean_trash.sh [-h] [-v] [-V] <保留天数>
 选项：
   -h  显示帮助信息
   -v  详细输出模式
+  -V  显示版本信息
 示例：
-  ./clean_trash.sh 30    # 清理 30 天前的回收站文件
-  ./clean_trash.sh -v 7  # 详细模式清理 7 天前文件
+  ./clean_trash.sh 30        # 清理 30 天前的回收站文件
+  ./clean_trash.sh -v 7      # 详细模式清理 7 天前文件
+  ./clean_trash.sh -V        # 显示版本信息
 ```
 
 ### 方法 2：安装到系统（推荐）
@@ -39,6 +41,8 @@ sudo ./scripts/install.sh
 # 启用每天自动清理（超过 30 天的文件）
 sudo systemctl enable --now clean-trash.timer
 ```
+
+## 卸载
 
 ```bash
 # 卸载

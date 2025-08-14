@@ -14,13 +14,15 @@ Project URL: [https://github.com/PJ-568/clean_trash](https://github.com/PJ-568/c
 
 ```bash
 Trash Cleaner Tool
-Usage: ./clean_trash.sh [-h] [-v] <days to keep>
+Usage: ./clean_trash.sh [-h] [-v] [-V] <days to keep>
 Options:
   -h  Show help message
   -v  Verbose output mode
+  -V  Show version
 Examples:
-  ./clean_trash.sh 30    # Clean trash files older than 30 days
-  ./clean_trash.sh -v 7  # Verbose mode to clean files older than 7 days
+  ./clean_trash.sh 30        # Clean trash files older than 30 days
+  ./clean_trash.sh -v 7      # Verbose mode to clean files older than 7 days
+  ./clean_trash.sh -V        # Show version information
 ```
 
 ### Method 2: System Installation (Recommended)
@@ -39,6 +41,8 @@ sudo ./scripts/install.sh
 # Enable daily automatic cleanup (files older than 30 days)
 sudo systemctl enable --now clean-trash.timer
 ```
+
+## Uninstallation
 
 ```bash
 # Uninstall
