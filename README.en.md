@@ -6,6 +6,12 @@
 
 A script to clean files in the trash that have been kept for more than a specified number of days.
 
+Project URL: [https://github.com/PJ-568/clean_trash](https://github.com/PJ-568/clean_trash)
+
+## Installation and Usage
+
+### Method 1: Direct Script Usage
+
 ```bash
 Trash Cleaner Tool
 Usage: ./clean_trash.sh [-h] [-v] <days to keep>
@@ -15,6 +21,28 @@ Options:
 Examples:
   ./clean_trash.sh 30    # Clean trash files older than 30 days
   ./clean_trash.sh -v 7  # Verbose mode to clean files older than 7 days
+```
+
+### Method 2: System Installation (Recommended)
+
+The installation script will copy `clean_trash.sh` to `/usr/local/bin/clean_trash` and create a systemd service (not enabled by default):
+
+```bash
+# Remote installation from GitHub (without cloning the repository)
+curl -sS https://raw.githubusercontent.com/PJ-568/clean_trash/master/scripts/install.sh | bash
+
+# Or clone the repository and install locally
+git clone https://github.com/PJ-568/clean_trash.git
+cd clean_trash
+sudo ./scripts/install.sh
+
+# Enable daily automatic cleanup (files older than 30 days)
+sudo systemctl enable --now clean-trash.timer
+```
+
+```bash
+# Uninstall
+curl -sS https://raw.githubusercontent.com/PJ-568/clean_trash/master/scripts/uninstall.sh | bash
 ```
 
 ## Contributing
