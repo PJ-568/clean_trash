@@ -6,7 +6,10 @@ on:
       - master
 
 jobs:
+  test:
+    uses: ./.github/workflows/test.yml
   release:
+    needs: test
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -14,53 +17,53 @@ jobs:
       id-token: write
     name: 发行新版本
     steps:
-    - name: 检出代码
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: 检查版本
-      id: version-check
-      run: |
-        VERSION=$(./scripts/is-newer-version.bash)
-        echo "version=${VERSION}" >> $GITHUB_OUTPUT
-        if [ "$VERSION" != "0" ]; then
-          echo "检测到新版本: $VERSION"
-        else
-          echo "没有新版本需要发行"
-        fi
+      - name: 检查版本
+        id: version-check
+        run: |
+          VERSION=$(./scripts/is-newer-version.bash)
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          if [ "$VERSION" != "0" ]; then
+            echo "检测到新版本: $VERSION"
+          else
+            echo "没有新版本需要发行"
+          fi
 
-    - name: 推送标签
-      if: steps.version-check.outputs.version != '0'
-      id: push-tag
-      run: |
-        tag="v${{ steps.version-check.outputs.version }}"
-        git config user.name "${GITHUB_ACTOR}"
-        git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-        git tag -a "${tag}" -m "Release ${tag}"
-        git push origin "${tag}"
-        echo "tag_name=${tag}" >> $GITHUB_OUTPUT
+      - name: 推送标签
+        if: steps.version-check.outputs.version != '0'
+        id: push-tag
+        run: |
+          tag="v${{ steps.version-check.outputs.version }}"
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          git tag -a "${tag}" -m "Release ${tag}"
+          git push origin "${tag}"
+          echo "tag_name=${tag}" >> $GITHUB_OUTPUT
 
-    - name: 准备发行文件
-      if: steps.version-check.outputs.version != '0'
-      run: |
-        mkdir -p ../release
-        cp -v clean_trash.sh ../release/clean_trash
-        # 确保脚本具有执行权限
-        chmod +x ../release/clean_trash
+      - name: 准备发行文件
+        if: steps.version-check.outputs.version != '0'
+        run: |
+          mkdir -p ../release
+          cp -v clean_trash.sh ../release/clean_trash
+          # 确保脚本具有执行权限
+          chmod +x ../release/clean_trash
 
-    - name: 创建 GitHub Release
-      if: steps.version-check.outputs.version != '0'
-      uses: ncipollo/release-action@v1
-      with:
-        generateReleaseNotes: true
-        tag: "v${{ steps.version-check.outputs.version }}"
-        artifacts: "../release/clean_trash"
+      - name: 创建 GitHub Release
+        if: steps.version-check.outputs.version != '0'
+        uses: ncipollo/release-action@v1
+        with:
+          generateReleaseNotes: true
+          tag: "v${{ steps.version-check.outputs.version }}"
+          artifacts: "../release/clean_trash"
 
-    - name: 删除标签（如果失败）
-      if: (cancelled() || failure()) && steps.push-tag.outputs.tag_name != ''
-      run: |
-        git config user.name "${GITHUB_ACTOR}"
-        git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-        git push --delete origin "${{ steps.push-tag.outputs.tag_name }}"
-        git tag -d "${{ steps.push-tag.outputs.tag_name }}"
+      - name: 删除标签（如果失败）
+        if: (cancelled() || failure()) && steps.push-tag.outputs.tag_name != ''
+        run: |
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          git push --delete origin "${{ steps.push-tag.outputs.tag_name }}"
+          git tag -d "${{ steps.push-tag.outputs.tag_name }}"

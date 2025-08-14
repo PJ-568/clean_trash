@@ -3,7 +3,7 @@
 # 设置定量 | Quantities
 ## 初始化变量 | Initialize variables
 VERBOSE=0
-VERSION="1.0.1"
+VERSION="1.0.2"
 ## 当前语言 | Current language
 CURRENT_LANG=0 # 0: en-US, 1: zh-Hans-CN
 ## 定义回收站目录 | Define trash directory
