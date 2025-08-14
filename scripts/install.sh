@@ -4,9 +4,26 @@
 
 set -e  # 遇到错误时退出
 
+# 当前语言 | Current language
+CURRENT_LANG=0 # 0: en-US, 1: zh-Hans-CN
+
+# 本地化 | Localization
+recho() {
+  if [ $CURRENT_LANG == 1 ]; then
+    ## zh-Hans-CN
+    echo "$1";
+  else
+    ## en-US
+    echo "$2";
+  fi
+}
+
+# 语言检测 | Language detection
+if [ $(echo ${LANG/_/-} | grep -Ei "\\b(zh|cn)\\b") ]; then CURRENT_LANG=1; fi
+
 # 检查是否以 root 权限运行
 if [[ $EUID -eq 0 ]]; then
-   echo "请不要以 root 权限运行此脚本"
+   recho "请不要以 root 权限运行此脚本" "Please do not run this script with root privileges"
    exit 1
 fi
 
@@ -24,17 +41,17 @@ if [ -t 0 ]; then
     ROOT_DIR="$(dirname "$SCRIPT_DIR")"
     CLEAN_TRASH_SOURCE="$ROOT_DIR/clean_trash.sh"
     
-    echo "本地安装模式"
+    recho "本地安装模式" "Local installation mode"
 else
     # 远程执行模式（通过管道）
-    echo "远程安装模式"
+    recho "远程安装模式" "Remote installation mode"
     CLEAN_TRASH_SOURCE="https://raw.githubusercontent.com/PJ-568/clean_trash/master/clean_trash.sh"
 fi
 
-echo "正在安装 $EXEC_NAME..."
+recho "正在安装 $EXEC_NAME..." "Installing $EXEC_NAME..."
 
 # 1. 复制/下载执行文件到系统路径
-echo "1. 安装执行文件到 $BIN_PATH/$EXEC_NAME"
+recho "1. 安装执行文件到 $BIN_PATH/$EXEC_NAME" "1. Installing executable to $BIN_PATH/$EXEC_NAME"
 if [ -t 0 ]; then
     # 本地复制
     sudo cp "$CLEAN_TRASH_SOURCE" "$BIN_PATH/$EXEC_NAME"
@@ -45,7 +62,7 @@ fi
 sudo chmod +x "$BIN_PATH/$EXEC_NAME"
 
 # 2. 创建 systemd 服务文件
-echo "2. 创建 systemd 服务文件"
+recho "2. 创建 systemd 服务文件" "2. Creating systemd service file"
 sudo tee "$SERVICE_PATH/$SERVICE_NAME.service" > /dev/null <<EOF
 [Unit]
 Description=Clean Trash Service
@@ -63,7 +80,7 @@ WantedBy=multi-user.target
 EOF
 
 # 3. 创建 systemd 定时器文件
-echo "3. 创建 systemd 定时器文件"
+recho "3. 创建 systemd 定时器文件" "3. Creating systemd timer file"
 sudo tee "$SERVICE_PATH/$SERVICE_NAME.timer" > /dev/null <<EOF
 [Unit]
 Description=Clean trash daily
@@ -78,16 +95,16 @@ WantedBy=timers.target
 EOF
 
 # 重新加载 systemd 配置
-echo "4. 重新加载 systemd 配置"
+recho "4. 重新加载 systemd 配置" "4. Reloading systemd configuration"
 sudo systemctl daemon-reload
 
-echo "安装完成！"
+recho "安装完成！" "Installation completed!"
 echo ""
-echo "要启用每天自动清理，请运行："
+recho "要启用每天自动清理，请运行：" "To enable daily automatic cleanup, run:"
 echo "  sudo systemctl enable --now $SERVICE_NAME.timer"
 echo ""
-echo "要手动运行清理："
+recho "要手动运行清理：" "To run cleanup manually:"
 echo "  $EXEC_NAME 30"
 echo ""
-echo "要查看服务状态："
+recho "要查看服务状态：" "To check service status:"
 echo "  systemctl status $SERVICE_NAME.timer"
