@@ -107,11 +107,11 @@ for INFO_FILE in "$INFO_DIR"/*.trashinfo; do
   if [ ! -f "$INFO_FILE" ]; then
     continue
   fi
-  
+
   # 获取对应的文件名 | Get corresponding filename
   BASENAME=$(basename "$INFO_FILE" .trashinfo)
   TRASH_FILE="$FILES_DIR/$BASENAME"
-  
+
   # 检查对应的文件是否存在 | Check if corresponding file exists
   if [ ! -e "$TRASH_FILE" ]; then
     if [ $VERBOSE -eq 1 ]; then
@@ -119,10 +119,10 @@ for INFO_FILE in "$INFO_DIR"/*.trashinfo; do
     fi
     continue
   fi
-  
+
   # 从 .trashinfo 文件中提取 DeletionDate | Extract DeletionDate from .trashinfo file
   DELETION_DATE=$(grep -E "^DeletionDate=" "$INFO_FILE" | cut -d'=' -f2)
-  
+
   # 检查是否成功提取日期 | Check if date was extracted successfully
   if [ -z "$DELETION_DATE" ]; then
     if [ $VERBOSE -eq 1 ]; then
@@ -130,11 +130,11 @@ for INFO_FILE in "$INFO_DIR"/*.trashinfo; do
     fi
     continue
   fi
-  
+
   # 将删除日期转换为时间戳 | Convert deletion date to timestamp
   # 注意：日期格式为 2025-08-13T19:47:35
   DELETION_TIMESTAMP=$(date -d "$DELETION_DATE" +%s 2>/dev/null)
-  
+
   # 检查日期转换是否成功 | Check if date conversion was successful
   if [ $? -ne 0 ] || [ -z "$DELETION_TIMESTAMP" ]; then
     if [ $VERBOSE -eq 1 ]; then
@@ -142,22 +142,22 @@ for INFO_FILE in "$INFO_DIR"/*.trashinfo; do
     fi
     continue
   fi
-  
+
   # 检查文件是否超过保留天数 | Check if file exceeds retention days
   if [ "$DELETION_TIMESTAMP" -lt "$CUTOFF_TIME" ]; then
     # 创建唯一的 expunged 文件名 | Create unique expunged filename
     EXPUNGED_FILE="$EXPUNGED_DIR/$BASENAME"
-    
+
     # 如果文件已存在，则添加时间戳以确保唯一性 | If file exists, add timestamp to ensure uniqueness
     if [ -e "$EXPUNGED_FILE" ]; then
       EXPUNGED_FILE="$EXPUNGED_DIR/${BASENAME}_$(date +%s)"
     fi
-    
+
     # 将文件移动到 expunged 目录 | Move file to expunged directory
     if [ $VERBOSE -eq 1 ]; then
       recho "移动文件到 expunged: $TRASH_FILE (删除于 $DELETION_DATE)" "Moving file to expunged: $TRASH_FILE (deleted at $DELETION_DATE)"
     fi
-    
+
     if mv "$TRASH_FILE" "$EXPUNGED_FILE"; then
       # 删除元数据文件 | Delete metadata file
       rm -f "$INFO_FILE"
