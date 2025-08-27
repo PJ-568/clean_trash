@@ -3,7 +3,7 @@
 # 设置定量 | Quantities
 ## 初始化变量 | Initialize variables
 VERBOSE=0
-VERSION="1.0.3"
+VERSION="1.1.0"
 ## 当前语言 | Current language
 CURRENT_LANG=0 # 0: en-US, 1: zh-Hans-CN
 ## 定义回收站目录 | Define trash directory
@@ -101,8 +101,9 @@ ERROR_COUNT=0
 # 确保 expunged 目录存在 | Ensure expunged directory exists
 mkdir -p "$EXPUNGED_DIR"
 
-# 遍历 info 目录中的所有 .trashinfo 文件 | Iterate through all .trashinfo files in info directory
-for INFO_FILE in "$INFO_DIR"/*.trashinfo; do
+# 使用 find 避免内存中的文件名扩展 | Use find to avoid filename expansion in memory
+# 使用 process substitution 和 while 循环处理每个文件 | Use process substitution and while loop to process each file
+while IFS= read -r -d '' INFO_FILE; do
   # 检查文件是否存在 | Check if file exists
   if [ ! -f "$INFO_FILE" ]; then
     continue
@@ -121,7 +122,13 @@ for INFO_FILE in "$INFO_DIR"/*.trashinfo; do
   fi
 
   # 从 .trashinfo 文件中提取 DeletionDate | Extract DeletionDate from .trashinfo file
-  DELETION_DATE=$(grep -E "^DeletionDate=" "$INFO_FILE" | cut -d'=' -f2)
+  # 使用内置参数替换代替 grep/cut 管道 | Use built-in parameter substitution instead of grep/cut pipeline
+  while IFS='=' read -r KEY VALUE; do
+    if [ "$KEY" = "DeletionDate" ]; then
+      DELETION_DATE="$VALUE"
+      break
+    fi
+  done < "$INFO_FILE"
 
   # 检查是否成功提取日期 | Check if date was extracted successfully
   if [ -z "$DELETION_DATE" ]; then
@@ -167,12 +174,16 @@ for INFO_FILE in "$INFO_DIR"/*.trashinfo; do
       recho "错误：无法移动文件到 expunged 目录" "Error: Cannot move file to expunged directory" >&2
     fi
   fi
-done
+  
+  # 重置变量以节省内存 | Reset variables to save memory
+  unset DELETION_DATE DELETION_TIMESTAMP
+done < <(find "$INFO_DIR" -name '*.trashinfo' -print0 2>/dev/null)
 
 # 物理删除 expunged 目录中的所有文件 | Physically delete all files in expunged directory
 if [ -d "$EXPUNGED_DIR" ]; then
   if [ $VERBOSE -eq 1 ]; then
-    EXPUNGED_COUNT=$(find "$EXPUNGED_DIR" -mindepth 1 2>/dev/null | wc -l)
+    # 使用 stat 而不是 find | wc -l 来计算文件数 | Use stat instead of find | wc -l to count files
+    EXPUNGED_COUNT=$(find "$EXPUNGED_DIR" -type f -printf '.' 2>/dev/null | wc -c)
     if [ "$EXPUNGED_COUNT" -gt 0 ]; then
       recho "物理删除 expunged 目录中的 $EXPUNGED_COUNT 个文件" "Physically deleting $EXPUNGED_COUNT files in expunged directory"
     fi
